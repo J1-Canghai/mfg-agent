@@ -1,0 +1,15 @@
+{"question": "加工中心开机以后回零，应该先回哪个轴？", "source": "cnc_hr850.md", "section": "3. 开机与关机流程"}
+{"question": "主轴一直报过载，该怎么处理？", "source": "cnc_hr850.md", "section": "6. 报警代码表"}
+{"question": "导轨润滑油用完了，能不能先拿液压油顶一下？", "source": "cnc_hr850.md", "section": "5. 润滑系统"}
+{"question": "加工中心多久换一次液压油，用什么油？", "source": "cnc_hr850.md", "section": "4. 日常保养"}
+{"question": "铣出来的零件尺寸老是不准，可能是什么原因？", "source": "cnc_hr850.md", "section": "7. 常见故障排除"}
+{"question": "小车走着走着扫不到地上的码了，怎么办？", "source": "agv_t300.md", "section": "5. 报警代码表"}
+{"question": "AGV 电量低到多少会自己回去充电？", "source": "agv_t300.md", "section": "4. 充电与电池管理"}
+{"question": "AGV 拉满货的时候最快能跑多快？", "source": "agv_t300.md", "section": "2. 主要参数"}
+{"question": "AGV 前面的激光雷达镜片该怎么擦？", "source": "agv_t300.md", "section": "6. 维护保养"}
+{"question": "AGV 的灯变成蓝色是什么意思？", "source": "agv_t300.md", "section": "3. 日常操作"}
+{"question": "尼龙件表面出现一道道银白色的花纹，是什么原因？", "source": "injection_im250.md", "section": "5. 常见成型缺陷与对策"}
+{"question": "PC 料打之前要烘多久？", "source": "injection_im250.md", "section": "4. 常用物料工艺参数"}
+{"question": "注塑件边上多了一圈薄薄的毛边，怎么解决？", "source": "injection_im250.md", "section": "5. 常见成型缺陷与对策"}
+{"question": "注塑机报液压油温度太高，要检查什么？", "source": "injection_im250.md", "section": "6. 报警代码"}
+{"question": "料筒还没热透就转螺杆会有什么后果？", "source": "injection_im250.md", "section": "3. 开机流程"}
