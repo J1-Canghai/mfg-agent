@@ -7,6 +7,7 @@ Each turn (question, tool calls, latency, tokens) is appended to data/agent_log.
 
 Usage: python agent.py
 """
+
 import json
 import time
 from pathlib import Path
@@ -33,6 +34,19 @@ SYSTEM_PROMPT = """你是制造车间的智能助手，可以使用三个工具�
 3. 用户说某台设备坏了、停机、在维修，就把它放进 unavailable_machines 重新优化，并和之前的结果对比
 4. 用中文，简洁，分点"""
 
+
+def summarize_tasks():
+    shop = load_shop()
+    result = {}
+    for task in shop["tasks"]:
+        t = task["type"]
+        if t not in result:
+            result[t] = {"count": 0, "hours": 0}
+        result[t]["count"] += 1
+        result[t]["hours"] += task["hours"]
+    return result
+
+
 TOOLS = [
     {
         "type": "function",
@@ -42,7 +56,10 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "检索用的问题或关键词，例如'ALM 2010 气压不足怎么处理'"},
+                    "query": {
+                        "type": "string",
+                        "description": "检索用的问题或关键词，例如'ALM 2010 气压不足怎么处理'",
+                    },
                 },
                 "required": ["query"],
             },
@@ -78,6 +95,15 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "summarize_tasks",
+            "description": "按任务类型（铣削 / 注塑）统计待加工任务的数量和总工时。"
+            "用户问某类任务有几个、一共多少小时时用这个，不需要列出全部任务明细",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
 ]
 
 
@@ -88,13 +114,18 @@ def search_manual(query):
 
 def get_shop_info():
     shop = load_shop()
-    return {"machines": shop["machines"], "task_count": len(shop["tasks"]), "tasks": shop["tasks"]}
+    return {
+        "machines": shop["machines"],
+        "task_count": len(shop["tasks"]),
+        "tasks": shop["tasks"],
+    }
 
 
 TOOL_FUNCS = {
     "search_manual": search_manual,
     "get_shop_info": get_shop_info,
     "optimize_schedule": optimize_schedule,
+    "summarize_tasks": summarize_tasks,
 }
 
 
@@ -113,7 +144,10 @@ def chat(messages, verbose=True):
     start = time.time()
     for _ in range(MAX_STEPS):
         resp = chat_client.chat.completions.create(
-            model=CHAT_MODEL, messages=messages, tools=TOOLS, temperature=0.2,
+            model=CHAT_MODEL,
+            messages=messages,
+            tools=TOOLS,
+            temperature=0.2,
         )
         msg = resp.choices[0].message
         if resp.usage:
@@ -123,23 +157,34 @@ def chat(messages, verbose=True):
             messages.append({"role": "assistant", "content": msg.content})
             break
 
-        messages.append({
-            "role": "assistant",
-            "content": msg.content or "",
-            "tool_calls": [tc.model_dump() for tc in msg.tool_calls],
-        })
+        messages.append(
+            {
+                "role": "assistant",
+                "content": msg.content or "",
+                "tool_calls": [tc.model_dump() for tc in msg.tool_calls],
+            }
+        )
         for tc in msg.tool_calls:
             args = json.loads(tc.function.arguments or "{}")
             if verbose:
-                print(f"  [tool] {tc.function.name}({json.dumps(args, ensure_ascii=False)})")
+                print(
+                    f"  [tool] {tc.function.name}({json.dumps(args, ensure_ascii=False)})"
+                )
             log["tool_calls"].append({"name": tc.function.name, "args": args})
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": run_tool(tc.function.name, args),
-            })
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tc.id,
+                    "content": run_tool(tc.function.name, args),
+                }
+            )
     else:
-        messages.append({"role": "assistant", "content": "（工具调用次数过多，已停止，请换个问法再试。）"})
+        messages.append(
+            {
+                "role": "assistant",
+                "content": "（工具调用次数过多，已停止，请换个问法再试。）",
+            }
+        )
 
     log["seconds"] = round(time.time() - start, 2)
     with LOG_FILE.open("a", encoding="utf-8") as f:
